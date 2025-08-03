@@ -38,7 +38,7 @@ class TwigExtension extends AbstractExtension
         ];
     }
 
-    public function getFilters()
+    public function getFilters(): array
     {
         return [
             new TwigFilter('is_array', fn (mixed $s) => is_array($s)),
