@@ -7,7 +7,6 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\HttpOperation;
 use ApiPlatform\Metadata\Put;
 use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
-use Survos\ApiGrid\State\MeiliSearchStateProvider;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\String\Slugger\AsciiSlugger;
@@ -50,12 +49,6 @@ class InspectionService
 
                     $params = [];
                     $provider = $operation->getProvider();
-                    if ($provider === MeiliSearchStateProvider::class) {
-                        foreach (array_keys($operation->getUriVariables()) as $var) {
-                            // total hack
-                            $params[$var] = (new \ReflectionClass($resourceClass))->getShortName();
-                        }
-                    }
                     $url = $this->urlGenerator->generate($operation->getName(), $params);
                     $urls[$operation->getProvider()] = $url;
 //                    dd($url, $operation, $route);
@@ -69,23 +62,5 @@ class InspectionService
         }
         return $routes;
 //        return $urls;
-    }
-
-
-    public function getMeiliCollectionUrl(string $resourceClass): ?string
-    {
-        return $this->getAllUrlsForResource($resourceClass)[MeiliSearchStateProvider::class]??null;
-
-//        foreach ($this->resourceMetadataCollectionFactory->create($resourceClass) as $resourceMetadata) {
-//            foreach ($resourceMetadata->getOperations() as $operation) {
-//                if ($operation::class === GetCollection::class) {
-//                    $provider = $operation->getProvider();
-//                    if ($provider === MeiliSearchStateProvider::class) {
-//                    }
-//                }
-//            }
-//
-//        }
-
     }
 }

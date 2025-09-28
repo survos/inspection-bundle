@@ -2,6 +2,7 @@
 
 namespace Survos\InspectionBundle\Controller;
 
+use cebe\openapi\Reader;
 use cebe\openapi\spec\Schema;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -26,26 +27,14 @@ class InspectionController extends AbstractController
             return new Response('', 200, ['Content-Type' => 'application/json']);
         }
 
-//        $openapi = Reader::readFromJsonFile($fn);
+        $openapi = class_exists(Reader::class) ? Reader::readFromJsonFile($fn) : null;
+
 //        $spec = $openapi->getSerializableData();
 
         $data = json_decode(file_get_contents($fn));
         $data = json_decode(json_encode($data), true);
-//        dd($data);
-        // get all the entity classes that implement some core class
-
-//        $spec = $openapi->getSerializableData();
-//        dd($spec->components->schemas);
-        /** @var Schema $schema */
-//        foreach ($openapi->components->schemas as $schema) {
-//            dd($schema); // , $schema->getDescription());
-//            dump($openapi, $schema, $schema->description, $schema->example, $schema->getBaseDocument());
-//            $schemaProperties = $accessor->getValue($schema, 'properties');
-//            dd($schemaProperties, $schema, $details); // , $class, $details[$class]);
-//        }
-
         return $this->render('@SurvosInspection/entities.html.twig', [
-            'openapi' => $openapi??null,
+            'openapi' => $openapi,
             'spec' => $data
 //            'schemas' => $openapi->getSerializableData()->components->schemas, // $openapi->components->schemas,
         ]);

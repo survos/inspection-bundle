@@ -23,10 +23,6 @@ use ApiPlatform\Metadata\Resource\ResourceMetadataCollection;
         // 1. Get all resource classes known to API Platform
         $allResources = $this->resourceNames->create();
 
-        if ($allResources->getIterator()->count() > 0) {
-
-        }
-
 //        if (!in_array($class, $allResources, true)) {
 //            throw new \InvalidArgumentException("$class is not an API Resource");
 //        }
@@ -45,7 +41,6 @@ use ApiPlatform\Metadata\Resource\ResourceMetadataCollection;
             $input                = $resourceMetadata->getInput();  // DTO/input class
             $output               = $resourceMetadata->getOutput(); // DTO/output class
             $normalizationContext = $resourceMetadata->getNormalizationContext();
-            dd($normalizationContext);
             // …plus:
             foreach ($resourceMetadata->getOperations() as $operation) {
                 if ($operation::class === GetCollection::class) {
