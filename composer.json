@@ -12,15 +12,15 @@
     "require": {
         "php": "^8.4",
         "survos/core-bundle": "^2.0",
-        "symfony/config": "^7.3",
-        "symfony/dependency-injection": "^7.3",
-        "symfony/http-kernel": "^7.3",
+        "symfony/config": "^7.3||^8.0",
+        "symfony/dependency-injection": "^7.3||^8.0",
+        "symfony/http-kernel": "^7.3||^8.0",
         "twig/twig": "^3.4",
-        "symfony/string": "^7.3",
-        "symfony/framework-bundle": "^7.3"
+        "symfony/string": "^7.3||^8.0",
+        "symfony/framework-bundle": "^7.3||^8.0"
     },
     "require-dev": {
-        "api-platform/core": "^4.0",
+        "api-platform/core": "^3.2||^4.0",
         "phpstan/phpstan": "^2.0",
         "roave/security-advisories": "dev-latest",
         "symfony/routing": "^7.3",
