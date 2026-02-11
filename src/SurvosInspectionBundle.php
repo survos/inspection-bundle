@@ -67,6 +67,6 @@ class SurvosInspectionBundle extends AbstractBundle
         $definition->rootNode()
             ->children()
             ->booleanNode('debug')->defaultValue(false)->end()
-            ?->end();
+            ->end();
     }
 }

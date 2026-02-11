@@ -23,13 +23,15 @@
         "api-platform/core": "^4.0",
         "phpstan/phpstan": "^2.0",
         "roave/security-advisories": "dev-latest",
-        "symfony/routing": "^7.4||^8.0",
-        "cebe/php-openapi": "^1.8"
+        "symfony/routing": "^7.4||^8.0"
     },
     "autoload": {
         "psr-4": {
             "Survos\\InspectionBundle\\": "src/"
         }
+    },
+    "suggest": {
+        "cebe/php-openapi": "For reading open api specs"
     },
     "extra": {
         "branch-alias": {
