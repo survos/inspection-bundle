@@ -2,6 +2,7 @@
 
 namespace Survos\InspectionBundle;
 
+use ApiPlatform\Metadata\UrlGeneratorInterface;
 use Survos\InspectionBundle\Controller\InspectionController;
 use Survos\InspectionBundle\Services\InspectionService;
 use Survos\InspectionBundle\Services\ResourceInspector;
@@ -58,6 +59,9 @@ class SurvosInspectionBundle extends AbstractBundle
         $definition
             ->setArgument('$iriConverter',
                 new Reference('api_platform.symfony.iri_converter', ContainerInterface::NULL_ON_INVALID_REFERENCE)
+            )
+            ->setArgument('$apiUrlGenerator',
+                new Reference(UrlGeneratorInterface::class, ContainerInterface::NULL_ON_INVALID_REFERENCE)
             );
     }
 

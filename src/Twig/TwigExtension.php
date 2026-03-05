@@ -6,6 +6,7 @@ use ApiPlatform\Metadata\IriConverterInterface;
 use ApiPlatform\Doctrine\Orm\State\CollectionProvider;
 use ApiPlatform\Metadata\Exception\InvalidArgumentException;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\UrlGeneratorInterface as ApiUrlGeneratorInterface;
 use ApiPlatform\Symfony\Routing\IriConverter;
 use Survos\CoreBundle\Entity\RouteParametersInterface;
 use Survos\InspectionBundle\Services\InspectionService;
@@ -22,6 +23,7 @@ class TwigExtension extends AbstractExtension
     public function __construct(
         private InspectionService $inspectionService,
         private IriConverter|null $iriConverter = null,
+        private ?ApiUrlGeneratorInterface $apiUrlGenerator = null,
     ) {
     }
 
@@ -92,11 +94,20 @@ class TwigExtension extends AbstractExtension
     {
 
         $urls = $this->inspectionService->getAllUrlsForResource($entityOrClass);
-        if (count($urls)) {
-            $x = $urls[array_key_first($urls)]['opName'];
-        } else {
-            $x = null;
+        if (!count($urls)) {
+            return null;
         }
+
+        $operationName = $urls[array_key_first($urls)]['opName'] ?? null;
+        if (!$operationName) {
+            return null;
+        }
+
+        if (!$this->apiUrlGenerator) {
+            return null;
+        }
+
+        return $this->apiUrlGenerator->generate($operationName, $context, ApiUrlGeneratorInterface::ABS_PATH);
 //        try {
 //            // this won't work if there are multiple GetCollection routes
 ////            $x = $this->inspectionService->getAllUrlsForResource($entityOrClass)[CollectionProvider::class];
@@ -104,7 +115,6 @@ class TwigExtension extends AbstractExtension
 //        } catch (InvalidArgumentException $exception) {
 //            dd($exception);
 //        }
-        return $x;
     }
 
     public function apiItemRoute($entity)
