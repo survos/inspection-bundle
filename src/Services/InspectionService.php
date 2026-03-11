@@ -44,13 +44,13 @@ class InspectionService
                         'opName' => $operation->getName(),
                         'uriVaraibles' => $operation->getUriVariables()
                     ];
-                    $urls[$operation->getProvider()] = $operation->getName(); // $route;
+//                    $urls[$operation->getProvider()] = $operation->getName(); // $route;
 //                    continue;
 
                     $params = [];
-                    $provider = $operation->getProvider();
+//                    $provider = $operation->getProvider();
                     $url = $this->urlGenerator->generate($operation->getName(), $params);
-                    $urls[$operation->getProvider()] = $url;
+//                    $urls[$operation->getProvider()] = $url;
 //                    dd($url, $operation, $route);
 
 //                    $urls[$operation->getProvider()] = ->getPath();
