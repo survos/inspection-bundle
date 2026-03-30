@@ -1,29 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Survos\InspectionBundle\Twig;
 
-use ApiPlatform\Metadata\IriConverterInterface;
-use ApiPlatform\Doctrine\Orm\State\CollectionProvider;
-use ApiPlatform\Metadata\Exception\InvalidArgumentException;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\IriConverterInterface;
 use ApiPlatform\Metadata\UrlGeneratorInterface as ApiUrlGeneratorInterface;
 use ApiPlatform\Symfony\Routing\IriConverter;
 use Survos\CoreBundle\Entity\RouteParametersInterface;
 use Survos\InspectionBundle\Services\InspectionService;
 use Twig\Extension\AbstractExtension;
-use Twig\TwigFunction;
 use Twig\TwigFilter;
+use Twig\TwigFunction;
 
-use function Symfony\Component\String\u;
-
-//use ApiPlatform\Symfony\Routing\IriConverter
-
-class TwigExtension extends AbstractExtension
+final class TwigExtension extends AbstractExtension
 {
     public function __construct(
-        private InspectionService $inspectionService,
-        private IriConverter|null $iriConverter = null,
-        private ?ApiUrlGeneratorInterface $apiUrlGenerator = null,
+        private readonly InspectionService $inspectionService,
+        private readonly ?IriConverter $iriConverter = null,
+        private readonly ?ApiUrlGeneratorInterface $apiUrlGenerator = null,
     ) {
     }
 
@@ -33,119 +29,93 @@ class TwigExtension extends AbstractExtension
             new TwigFunction('api_route', [$this, 'apiCollectionRoute']),
             new TwigFunction('api_item_route', [$this, 'apiItemRoute']),
             new TwigFunction('api_subresource_route', [$this, 'apiCollectionSubresourceRoute']),
-//            new TwigFunction('sortable_fields', [$this, 'sortableFields']),
+            new TwigFunction('sortable_fields', [$this, 'sortableFields']),
             new TwigFunction('searchable_fields', [$this, 'searchableFields']),
+            new TwigFunction('api_columns', [$this, 'apiColumns']),
             new TwigFunction('search_builder_fields', [$this, 'searchBuilderFields']),
-
         ];
     }
 
     public function getFilters(): array
     {
         return [
-            new TwigFilter('is_array', fn (mixed $s) => is_array($s)),
-            new TwigFilter('array_is_list', fn (mixed $s) => is_array($s) && array_is_list($s)),
+            new TwigFilter('is_array', static fn (mixed $value): bool => is_array($value)),
+            new TwigFilter('array_is_list', static fn (mixed $value): bool => is_array($value) && array_is_list($value)),
         ];
     }
 
-
-    public function sortableFields(string $class): array
+    /**
+     * @return list<string>
+     */
+    public function sortableFields(object|string $class): array
     {
-        assert(class_exists($class), $class);
-        $reflector = new \ReflectionClass($class);
-        foreach ($reflector->getAttributes() as $attribute) {
-            if (!u($attribute->getName())->endsWith('ApiFilter')) {
-                continue;
-            }
-            $filter = $attribute->getArguments()[0];
-            if (u($filter)->endsWith('OrderFilter')) {
-                $orderProperties = $attribute->getArguments()['properties'];
-                return $orderProperties;
-            }
-        }
-        return [];
+        return $this->inspectionService->sortableFields($class);
     }
 
-    public function searchableFields(string $class): array
+    /**
+     * @return list<string>
+     */
+    public function searchableFields(object|string $class): array
     {
-        $reflector = new \ReflectionClass($class);
-        foreach ($reflector->getAttributes() as $attribute) {
-            if (!u($attribute->getName())->endsWith('ApiFilter')) {
-                continue;
-            }
-            $filter = $attribute->getArguments()[0];
-            if (u($filter)->endsWith('MultiFieldSearchFilter')) {
-                return $attribute->getArguments()['properties'];
-            }
-        }
-
-        return [];
+        return $this->inspectionService->searchableFields($class);
     }
 
-    private function getIriConverter(): IriConverterInterface
+    /**
+     * @return array<string, array{name: string, searchable: bool, sortable: bool}>
+     */
+    public function apiColumns(object|string $class): array
     {
-        if (!$this->iriConverter) {
-            throw new \LogicException("Install api-platform/core >= 2.7");
-        }
-        return $this->iriConverter;
+        return $this->inspectionService->defaultColumns($class);
     }
 
-    public function apiCollectionRoute($entityOrClass, array $context = []): ?string
+    public function apiCollectionRoute(object|string $entityOrClass, array $context = []): ?string
     {
-
         $urls = $this->inspectionService->getAllUrlsForResource($entityOrClass);
-        if (!count($urls)) {
+        if (!$urls || !$this->apiUrlGenerator) {
             return null;
         }
 
         $operationName = $urls[array_key_first($urls)]['opName'] ?? null;
-        if (!$operationName) {
+
+        return $operationName
+            ? $this->apiUrlGenerator->generate($operationName, $context, ApiUrlGeneratorInterface::ABS_PATH)
+            : null;
+    }
+
+    public function apiItemRoute(object $entity): ?string
+    {
+        if (!$this->iriConverter instanceof IriConverterInterface) {
             return null;
         }
 
-        if (!$this->apiUrlGenerator) {
+        return $this->iriConverter->getIriFromResource($entity);
+    }
+
+    public function apiCollectionSubresourceRoute(object|string $entityOrClass, RouteParametersInterface $parent): ?string
+    {
+        if (!$this->iriConverter instanceof IriConverterInterface) {
             return null;
         }
 
-        return $this->apiUrlGenerator->generate($operationName, $context, ApiUrlGeneratorInterface::ABS_PATH);
-//        try {
-//            // this won't work if there are multiple GetCollection routes
-////            $x = $this->inspectionService->getAllUrlsForResource($entityOrClass)[CollectionProvider::class];
-////            $x = $this->iriConverter->getIriFromResource($entityOrClass, operation: new GetCollection(), context: $context);
-//        } catch (InvalidArgumentException $exception) {
-//            dd($exception);
-//        }
-    }
-
-    public function apiItemRoute($entity)
-    {
-        $x = $this->getIriConverter()->getIriFromResource($entity);
-        return $x;
-    }
-
-    public function apiCollectionSubresourceRoute($entityOrClass, RouteParametersInterface $parent): ?string
-    {
-        //        #[ApiResource(
-        //            uriTemplate: '/companies/{companyId}/employees',
-        //            uriVariables: [
-        //                'companyId' => new Link(fromClass: Company::class, toProperty: 'company'),
-        //            ],
-        //            operations: [ new GetCollection() ]
-        //        )]
-        $iri = $this->iriConverter->getIriFromResource($entityOrClass, operation: new GetCollection(), context: $context = [
+        return $this->iriConverter->getIriFromResource($entityOrClass, operation: new GetCollection(), context: [
             'uri_variables' => $parent->getrp(),
         ]);
-        return $iri;
     }
 
+    /**
+     * @param list<object> $normalizedColumns
+     *
+     * @return list<int>
+     */
     public function searchBuilderFields(string $class, array $normalizedColumns): array
     {
         $columnNumbers = [];
-        foreach ($normalizedColumns as $idx => $normalizedColumn) {
+        foreach ($normalizedColumns as $index => $normalizedColumn) {
             if ($normalizedColumn->searchable) {
-                $columnNumbers[] = $idx;
+                $columnNumbers[] = $index;
             }
         }
+
         return $columnNumbers;
     }
 }

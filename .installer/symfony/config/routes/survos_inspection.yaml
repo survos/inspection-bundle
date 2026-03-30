@@ -1,5 +1,0 @@
-survos_inspection:
-  resource: '@SurvosInspectionBundle/config/routes.yaml'
-  prefix: '/inspection'
-
-
